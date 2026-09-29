@@ -1,0 +1,4 @@
+# Installed in addition to requirements.txt, only on the Raspberry Pi.
+# Not needed on laptop, so kept out of the shared requirements.txt.
+gpiozero
+RPi.GPIO

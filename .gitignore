@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+*.pyc
+
+# Personal/machine-specific — copy .env.example instead
+.env
+frontend/.env
+
+models/*
+!models/.gitkeep
+
+data/*
+!data/.gitkeep
+
+node_modules/
+frontend/dist/

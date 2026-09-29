@@ -1,0 +1,14 @@
+platform: raspberrypi
+
+# Smaller models than laptop.yaml — tuned for Pi CPU/RAM budget.
+stt_model: tiny.en
+llm_model: models/llama-3.2-3b-instruct.Q4_K_M.gguf
+llm_context: 2048
+piper_voice: models/piper/en_US-lessac-low.onnx
+
+default_location: Bengaluru
+
+gpio:
+  mute_button_pin: 17
+  listening_led_pin: 27
+  online_led_pin: 22

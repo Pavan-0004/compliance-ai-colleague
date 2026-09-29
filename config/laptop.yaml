@@ -1,0 +1,9 @@
+platform: laptop
+
+stt_model: base.en
+llm_model: models/llama-3.2-3b-instruct.Q4_K_M.gguf
+llm_context: 4096
+piper_voice: models/piper/en_US-lessac-medium.onnx
+
+default_location: Bengaluru
+mute_key: f9
