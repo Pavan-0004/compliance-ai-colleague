@@ -2,8 +2,7 @@
 __pycache__/
 *.pyc
 
-# Personal/machine-specific — copy .env.example instead
-.env
+# frontend/.env is machine-specific (unlike root .env, which is tracked)
 frontend/.env
 
 models/*
