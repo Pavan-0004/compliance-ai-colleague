@@ -9,17 +9,23 @@ export default function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Compliance-Safe AI Colleague</h1>
-        <span className={`conn-dot ${connected ? 'connected' : 'disconnected'}`} title={connected ? 'Connected to backend' : 'Disconnected'} />
+        <div className="app-brand">
+          <h1>Jarvis</h1>
+          <span className="app-sub">Personal AI Companion &nbsp;·&nbsp; 100% On-Device</span>
+        </div>
+        <span
+          className={`conn-dot ${connected ? 'connected' : 'disconnected'}`}
+          title={connected ? 'Backend connected' : 'Backend disconnected'}
+        />
       </header>
 
       {!state ? (
-        <p className="waiting">Waiting for backend at ws://127.0.0.1:8000/ws ...</p>
+        <p className="waiting">Connecting to backend…</p>
       ) : (
         <main className="app-main">
           <StatusDashboard state={state} onToggleMute={toggleMute} />
           <TranscriptFeed log={state.transcript_log} />
-          <MemoryPanel notesCount={state.notes_count} />
+          <MemoryPanel notesCount={state.notes_count ?? 0} />
         </main>
       )}
     </div>

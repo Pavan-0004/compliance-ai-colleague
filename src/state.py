@@ -8,12 +8,14 @@ class Stage:
     for the WebSocket feed with no extra conversion step."""
 
     IDLE = "idle"
+    WAITING_FOR_WAKE = "waiting_for_wake"
     LISTENING = "listening"
     MUTED = "muted"
     TRANSCRIBING = "transcribing"
     THINKING = "thinking"
     ONLINE_LOOKUP = "online_lookup"
     SPEAKING = "speaking"
+    FOLLOW_UP = "follow_up"
 
 
 @dataclass
@@ -25,6 +27,7 @@ class AppState:
     transcript_log: list = field(default_factory=list)
     notes_count: int = 0
     last_online_query: Optional[str] = None
+    mic_energy: float = 0.0
 
 
 class StateBroadcaster:

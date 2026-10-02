@@ -1,9 +1,21 @@
 platform: laptop
 
-stt_model: base.en
-llm_model: models/llama-3.2-3b-instruct.Q4_K_M.gguf
-llm_context: 4096
-piper_voice: models/piper/en_US-lessac-medium.onnx
+stt_binary: D:/Arjun/makeathon/whisper-blas-x64/whisper-cli.exe
+stt_model: D:/Arjun/makeathon/whisper-blas-x64/ggml-base.en.bin
+stt_threads: 4
+
+ollama_base_url: http://localhost:11434
+ollama_model: llama3.2:3b
+ollama_embed_model: nomic-embed-text
+
+piper_voice: models/piper/en_US-amy-medium.onnx
 
 default_location: Bengaluru
+follow_up_window_s: 15
 mute_key: f9
+
+wake_word:
+  enabled: true
+  model: hey_jarvis
+  threshold: 0.3
+  backend: onnx

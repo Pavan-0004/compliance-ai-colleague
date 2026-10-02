@@ -4,10 +4,9 @@ python-dotenv
 pyyaml
 sounddevice
 numpy
-faster-whisper
-llama-cpp-python
 piper-tts
 requests
 pynput
 langgraph
 langgraph-checkpoint-sqlite
+openwakeword

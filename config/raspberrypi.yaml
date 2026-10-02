@@ -1,12 +1,25 @@
 platform: raspberrypi
 
-# Smaller models than laptop.yaml — tuned for Pi CPU/RAM budget.
-stt_model: tiny.en
-llm_model: models/llama-3.2-3b-instruct.Q4_K_M.gguf
-llm_context: 2048
+# whisper.cpp compiled on Pi — see README for build steps.
+# Use tiny.en-q5_1 for minimum RAM (~40MB) and fastest inference (~1-2s).
+stt_binary: /home/pi/whisper.cpp/build/bin/whisper-cli
+stt_model: models/ggml-tiny.en-q5_1.bin
+stt_threads: 3
+
+# Ollama running on the Pi — pull models with: ollama pull llama3.2:1b
+# 1B model to fit within Pi 4's 2GB RAM alongside STT + TTS.
+ollama_base_url: http://localhost:11434
+ollama_model: llama3.2:1b
+ollama_embed_model: nomic-embed-text
 piper_voice: models/piper/en_US-lessac-low.onnx
 
 default_location: Bengaluru
+
+wake_word:
+  enabled: true
+  model: hey_jarvis
+  threshold: 0.5
+  backend: tflite
 
 gpio:
   mute_button_pin: 17

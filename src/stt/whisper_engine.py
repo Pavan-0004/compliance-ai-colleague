@@ -1,39 +1,75 @@
 import logging
+import os
+import re
+import subprocess
+import tempfile
+import wave
 
 import numpy as np
-from faster_whisper import WhisperModel
 
 logger = logging.getLogger(__name__)
 
+_SAMPLE_RATE = 16000
+# Strips "[00:00:00.000 --> 00:00:05.000]  " prefixes if -nt flag is ignored
+_TIMESTAMP_RE = re.compile(r"^\[[\d:\.]+\s*-->\s*[\d:\.]+\]\s*")
+
 
 class WhisperEngine:
-    """Local speech-to-text only — never uploads audio anywhere. Model size
-    is picked per-platform in config/*.yaml (base.en on laptop, tiny.en on Pi).
+    """Local STT via whisper.cpp subprocess.
 
-    faster-whisper fetches its model from Hugging Face on first use and
-    caches it locally, but by default it still calls out to huggingface.co
-    on every startup afterwards just to revalidate the cache — which is
-    exactly the kind of silent network call this project's compliance-safe
-    story is supposed to rule out. Once the model is cached (see
-    scripts/download_models.sh), we load with local_files_only=True so
-    startup never touches the network at all; only a genuinely missing
-    cache falls back to an online, one-time download.
+    Audio is written to a temp WAV, whisper-cli is invoked, and the temp
+    file is deleted immediately. No model loaded in-process — the binary
+    handles all memory, so it does not compete with the LLM's RAM budget.
+    binary  — full path to whisper-cli (or whisper-cli.exe on Windows)
+    model   — full path to ggml-*.bin model file
     """
 
-    def __init__(self, model_size: str = "base.en", device: str = "cpu", compute_type: str = "int8"):
-        try:
-            self.model = WhisperModel(
-                model_size, device=device, compute_type=compute_type, local_files_only=True
-            )
-        except Exception:
-            logger.warning(
-                "STT model '%s' not found in local cache — downloading once from "
-                "Hugging Face. Re-run scripts/download_models.sh to pre-cache it "
-                "so future startups stay fully offline.",
-                model_size,
-            )
-            self.model = WhisperModel(model_size, device=device, compute_type=compute_type)
+    def __init__(self, binary: str, model: str, n_threads: int = 4):
+        self.binary = binary
+        self.model = model
+        self.n_threads = n_threads
 
     def transcribe(self, audio: np.ndarray) -> str:
-        segments, _ = self.model.transcribe(audio, language="en", beam_size=1)
-        return " ".join(seg.text.strip() for seg in segments).strip()
+        tmp = tempfile.NamedTemporaryFile(suffix=".wav", delete=False)
+        tmp.close()
+        try:
+            _write_wav(tmp.name, audio)
+            result = subprocess.run(
+                [
+                    self.binary,
+                    "-m", self.model,
+                    "-f", tmp.name,
+                    "-l", "en",
+                    "-t", str(self.n_threads),
+                    "--beam-size", "1",
+                    "--no-fallback",
+                    "-nt",  # no timestamps
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if result.returncode != 0:
+                logger.warning("whisper-cli exited %d: %s", result.returncode, result.stderr[:300])
+            return _parse(result.stdout)
+        finally:
+            os.unlink(tmp.name)
+
+
+def _write_wav(path: str, audio: np.ndarray) -> None:
+    pcm = (np.clip(audio.flatten(), -1.0, 1.0) * 32767).astype(np.int16)
+    with wave.open(path, "wb") as wf:
+        wf.setnchannels(1)
+        wf.setsampwidth(2)
+        wf.setframerate(_SAMPLE_RATE)
+        wf.writeframes(pcm.tobytes())
+
+
+def _parse(stdout: str) -> str:
+    lines = []
+    for line in stdout.splitlines():
+        line = _TIMESTAMP_RE.sub("", line).strip()
+        # Skip whisper.cpp internal log lines that occasionally leak to stdout
+        if line and not line.startswith(("whisper_", "system_info", "main:")):
+            lines.append(line)
+    return " ".join(lines).strip()

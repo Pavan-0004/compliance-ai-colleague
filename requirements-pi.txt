@@ -2,3 +2,5 @@
 # Not needed on laptop, so kept out of the shared requirements.txt.
 gpiozero
 RPi.GPIO
+# tflite backend for openwakeword — lighter and faster than onnxruntime on ARM
+tflite-runtime
